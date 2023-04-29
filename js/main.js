@@ -1,47 +1,4 @@
-/*
- ** Countdown Timer
- ** Video URL: https://www.youtube.com/watch?v=eFsiOTJrrE8
- */
 
-// The End Of The Year Date
-// 1000 milliseconds = 1 Second
-
-let countDownDate = new Date("Dec 31, 2022 23:59:59").getTime();
-// console.log(countDownDate);
-
-let counter = setInterval(() => {
-  // Get Date Now
-  let dateNow = new Date().getTime();
-
-  // Find The Date Difference Between Now And Countdown Date
-  let dateDiff = countDownDate - dateNow;
-
-  // Get Time Units
-  // let days = Math.floor(dateDiff / 1000 / 60 / 60 / 24);
-  let days = Math.floor(dateDiff / (1000 * 60 * 60 * 24));
-  let hours = Math.floor((dateDiff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-  let minutes = Math.floor((dateDiff % (1000 * 60 * 60)) / (1000 * 60));
-  let seconds = Math.floor((dateDiff % (1000 * 60)) / 1000);
-
-  document.querySelector(".days").innerHTML = days < 10 ? `0${days}` : days;
-  document.querySelector(".hours").innerHTML = hours < 10 ? `0${hours}` : hours;
-  document.querySelector(".minutes").innerHTML = minutes < 10 ? `0${minutes}` : minutes;
-  document.querySelector(".seconds").innerHTML = seconds < 10 ? `0${seconds}` : seconds;
-
-  if (dateDiff < 0) {
-    clearInterval(counter);
-  }
-}, 1000);
-
-/*
- ** Animate Width On Scrolling
- ** Video URL: https://youtu.be/sbIoIKI9FOc
- */
-
-/*
- ** Increase Numbers On Scrolling
- ** Video URL: https://youtu.be/PLsUdgLnzgQ
- */
 
 let progressSpans = document.querySelectorAll(".the-progress span");
 let section = document.querySelector(".our-skills");
@@ -115,18 +72,24 @@ const classesNames = [
   "ئ",
   "ز",
 ];
+const num=[0,1,2,3,4,5,6,7,8,9]
 let spans = document.getElementsByClassName("img-result");
 console.log(spans)
 let cam = document.getElementsByClassName("cam-result");
 let word = "";
 let handLandmarker = undefined;
 let handModel = undefined;
+let NUMModel = undefined;
 let Camletter = [];
+let CamNum = [];
 let Imgletter = [];
+let ImgNum = [];
 let runningMode = "IMAGE";
 let enableWebcamButton;
 let Space=false;
 let webcamRunning = false;
+let modelnum = false;
+let numButton;
 
 const videoHeight = 360;
 const videoWidth = 480;
@@ -147,6 +110,11 @@ const createHandLandmarker = async () => {
   handModel = await tf.loadLayersModel(
     "https://raw.githubusercontent.com/Mustafa-Esmaail/arabic-sign-language/sign-lang-model-v1/model.json"
   );
+  NUMModel = await tf.loadLayersModel(
+    "https://raw.githubusercontent.com/Mustafa-Esmaail/arabic-sign-language-translator/main/js/modelNum.json"
+  );
+  console.log(NUMModel)
+
  
 };
 createHandLandmarker();
@@ -232,24 +200,48 @@ async function handleClick(event) {
     });
 
     console.log(marks);
+    console.log(NUMModel)
 
     let tfMark = tf.tensor(marks).reshape([1, 42]);
+    if(event.target.id > 3){
 
-    const prediction = handModel.predict(tfMark);
-    const handResult = prediction.dataSync();
-    const arr = Array.from(handResult);
-    const maxPredict = Math.max.apply(null, arr);
-    const idx = arr.indexOf(maxPredict);
-    // console.log(handResult);
-    // console.log(arr);
-    // console.log(maxPredict);
-    // console.log(idx);
+      const prediction = NUMModel.predict(tfMark);
+      const handResult = prediction.dataSync();
+      const arr = Array.from(handResult);
+      const maxPredict = Math.max.apply(null, arr);
+      const idx = arr.indexOf(maxPredict);
+      ImgNum.push(num[idx]);
+      spans[event.target.id - 1].innerHTML = ImgNum[idx];
+      console.log(event.target.id)
+      console.log(idx)
 
-    Imgletter.push(classesNames[idx]);
-    // console.log(Imgletter);
-    // console.log(event.target.id);
-    console.log(event.target.id)
-    spans[event.target.id - 1].innerHTML = classesNames[idx];
+
+    }
+    else{
+      const prediction = handModel.predict(tfMark);
+      const handResult = prediction.dataSync();
+      const arr = Array.from(handResult);
+      const maxPredict = Math.max.apply(null, arr);
+      const idx = arr.indexOf(maxPredict);
+      Imgletter.push(classesNames[idx]);
+      spans[event.target.id - 1].innerHTML = classesNames[idx];
+
+    }
+
+    // const prediction = handModel.predict(tfMark);
+    // const handResult = prediction.dataSync();
+    // const arr = Array.from(handResult);
+    // const maxPredict = Math.max.apply(null, arr);
+    // const idx = arr.indexOf(maxPredict);
+    // // console.log(handResult);
+    // // console.log(arr);
+    // // console.log(maxPredict);
+    // // console.log(idx);
+
+    // // Imgletter.push(classesNames[idx]);
+    // // console.log(Imgletter);
+    // // console.log(event.target.id);
+    // console.log(event.target.id)
   });
   const canvas = document.createElement("canvas");
   canvas.setAttribute("class", "canvas");
@@ -301,9 +293,16 @@ function enableCam(event) {
     console.log("Wait! objectDetector not loaded yet.");
     return;
   }
+   document.getElementById("numB").style.display = '';
+   document.getElementById("delAll").style.display = '';
+   document.getElementById("delChar").style.display = '';
+   document.getElementById("addSpace").style.display = '';
+
+ 
   if (webcamRunning === true) {
     webcamRunning = false;
     enableWebcamButton.innerText = "ENABLE PREDICTIONS";
+
     // let addSpace = document.getElementById("addSpace");
     // cam.innerHTML=Camletter.join('')
 
@@ -334,6 +333,19 @@ async function predictWebcam() {
   }
   let startTimeMs = performance.now();
   const results = handLandmarker.detectForVideo(video, startTimeMs);
+  numButton = document.getElementById("numB");
+  
+  numButton.addEventListener("click", ()=>{
+    modelnum=!modelnum
+    // console.log(modelnum)
+    if(modelnum===true){
+      numButton.innerText = "DETECT LETTER";
+    }
+    else{
+      numButton.innerText = "DETECT NUM";
+  
+    }
+  });
 
   results.landmarks.map((landmarks) => {
     let landmark_point = [];
@@ -374,13 +386,23 @@ async function predictWebcam() {
     });
 
     let tfMark = tf.tensor(marks).reshape([1, 42]);
-
-    const prediction = handModel.predict(tfMark);
-    const handResult = prediction.dataSync();
-    const arr = Array.from(handResult);
-    const maxPredict = Math.max.apply(null, arr);
-    const idx = arr.indexOf(maxPredict);
-    Camletter.push(classesNames[idx]);
+    if(modelnum==true){
+      const prediction = handModel.predict(tfMark);
+      const handResult = prediction.dataSync();
+      const arr = Array.from(handResult);
+      const maxPredict = Math.max.apply(null, arr);
+      const idx = arr.indexOf(maxPredict);
+      Camletter.push(num[idx]);
+    }
+    else{
+      const prediction = handModel.predict(tfMark);
+      const handResult = prediction.dataSync();
+      const arr = Array.from(handResult);
+      const maxPredict = Math.max.apply(null, arr);
+      const idx = arr.indexOf(maxPredict);
+      Camletter.push(classesNames[idx]);
+    }
+    
 
   });
 
