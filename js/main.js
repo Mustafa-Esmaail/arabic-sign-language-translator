@@ -116,7 +116,7 @@ const classesNames = [
   "ز",
 ];
 let spans = document.getElementsByClassName("img-result");
-console.log(spans)
+
 let cam = document.getElementsByClassName("cam-result");
 let word = "";
 let handLandmarker = undefined;
@@ -417,8 +417,8 @@ async function predictWebcam() {
 
     document.querySelector(".cam-result").innerHTML=word
     setTimeout(() => {
-      window.requestAnimationFrame(predictWebcam);
-    }, 500);
+      predictWebcam();
+    }, 1000);
   }
 }
 
