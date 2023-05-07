@@ -418,7 +418,7 @@ async function predictWebcam() {
     document.querySelector(".cam-result").innerHTML=word
     setTimeout(() => {
       predictWebcam();
-    }, 1000);
+    }, 1500);
   }
 }
 
